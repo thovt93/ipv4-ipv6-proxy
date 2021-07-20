@@ -5,6 +5,8 @@ random() {
 }
 
 array=(1 2 3 4 5 6 7 8 9 0 a b c d e f)
+main_interface=$(ip route get 8.8.8.8 | awk -- '{printf $5}')
+
 gen64() {
 	ip64() {
 		echo "${array[$RANDOM % 16]}${array[$RANDOM % 16]}${array[$RANDOM % 16]}${array[$RANDOM % 16]}"
@@ -13,9 +15,9 @@ gen64() {
 }
 install_3proxy() {
     echo "installing 3proxy"
-    URL="https://github.com/z3APA3A/3proxy/archive/3proxy-0.8.6.tar.gz"
+    URL="https://github.com/z3APA3A/3proxy/archive/3proxy-0.9.4.tar.gz"
     wget -qO- $URL | bsdtar -xvf-
-    cd 3proxy-3proxy-0.8.6
+    cd 3proxy-3proxy-0.9.4
     make -f Makefile.Linux
     mkdir -p /usr/local/etc/3proxy/{bin,logs,stat}
     cp src/3proxy /usr/local/etc/3proxy/bin/
@@ -23,12 +25,25 @@ install_3proxy() {
     chmod +x /etc/init.d/3proxy
     chkconfig 3proxy on
     cd $WORKDIR
+
+    echo "net.ipv6.conf.$main_interface.proxy_ndp=1" >> /etc/sysctl.conf	
+    echo "net.ipv6.conf.all.proxy_ndp=1" >> /etc/sysctl.conf	
+    echo "net.ipv6.conf.default.forwarding=1" >> /etc/sysctl.conf	
+    echo "net.ipv6.conf.all.forwarding=1" >> /etc/sysctl.conf	
+    echo "net.ipv6.ip_nonlocal_bind = 1" >> /etc/sysctl.conf	
+    sysctl -p
+    systemctl stop firewalld
+    systemctl disable firewalld
 }
 
 gen_3proxy() {
     cat <<EOF
 daemon
 maxconn 1000
+nserver 8.8.8.8
+nserver 8.8.4.4
+nserver 1.1.1.1
+nserver 1.0.0.1
 nscache 65536
 timeouts 1 5 30 60 180 1800 15 60
 setgid 65535
@@ -75,7 +90,7 @@ EOF
 
 gen_ifconfig() {
     cat <<EOF
-$(awk -F "/" '{print "ifconfig eth0 inet6 add " $5 "/64"}' ${WORKDATA})
+$(awk -F "/" '{print "ifconfig '$main_interface' inet6 add " $5 "/64"}' ${WORKDATA})
 EOF
 }
 echo "installing apps"
@@ -93,11 +108,8 @@ IP6=$(curl -6 -s icanhazip.com | cut -f1-4 -d':')
 
 echo "Internal ip = ${IP4}. Exteranl sub for ip6 = ${IP6}"
 
-echo "How many proxy do you want to create? Example 500"
-read COUNT
-
 FIRST_PORT=10000
-LAST_PORT=$(($FIRST_PORT + $COUNT))
+LAST_PORT=11000
 
 gen_data >$WORKDIR/data.txt
 gen_iptables >$WORKDIR/boot_iptables.sh
