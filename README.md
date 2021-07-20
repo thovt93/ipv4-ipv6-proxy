@@ -11,7 +11,7 @@ Redirect connections from different ports at one ipv4 address to unique random i
 
 [Video tutorial](https://youtu.be/EKBJHSTmT4w), VPS from [Vultr _50$ free_](https://www.vultr.com/?ref=7847672-4F) used as Centos setup
 
-1. `bash <(curl -s "https://raw.githubusercontent.com/thovo93/ipv4-ipv6-proxy/master/scripts/install.sh")`
+1. `bash <(curl -s "https://raw.githubusercontent.com/thovt93/ipv4-ipv6-proxy/master/scripts/install.sh")`
 
 1. After installation dowload the file `proxy.zip`
    - File structure: `IP4:PORT:LOGIN:PASS`
