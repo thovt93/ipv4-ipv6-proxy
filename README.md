@@ -7,7 +7,7 @@ Redirect connections from different ports at one ipv4 address to unique random i
 - Centos 8
 - Ipv6 \64
 
-## Prepare
+## Prepare For DO
 
 1. Install `wget` & `iptables`
 
